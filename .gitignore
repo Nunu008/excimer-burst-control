@@ -1,0 +1,29 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.eggs/
+build/
+dist/
+.venv/
+venv/
+env/
+
+# Tooling caches
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.coverage
+coverage.xml
+htmlcov/
+
+# Qt / IDE
+*.qmlc
+*.jsc
+.idea/
+.vscode/
+.DS_Store
+
+# Local exports
+exports/
+*.csv
