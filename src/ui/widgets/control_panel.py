@@ -77,8 +77,14 @@ class ParameterSlider(QWidget):
         self.valueChanged.emit(value)
 
     def _update_label(self, value: float) -> None:
-        text = f"{value:.{self._decimals}f}{self._suffix}"
-        self._value.setText(text)
+        self._value.setText(f"{value:.{self._decimals}f}{self._suffix}")
+
+
+PRESET_BUTTONS: dict[str, tuple[str, str]] = {
+    "standard": ("2 kHz", PRESETS["standard"]),
+    "noise": ("Noise", PRESETS["noise"]),
+    "latency": ("Latency", PRESETS["latency"]),
+}
 
 
 class ControlPanel(QFrame):
@@ -121,37 +127,41 @@ class ControlPanel(QFrame):
         layout.addWidget(self._section("PRESETS"))
         presets = QHBoxLayout()
         presets.setSpacing(6)
-        for key, label in PRESETS.items():
-            button = QPushButton(label)
+        for key, (short, full) in PRESET_BUTTONS.items():
+            button = QPushButton(short)
+            button.setToolTip(full)
             button.clicked.connect(lambda _checked=False, key=key: self.presetRequested.emit(key))
             presets.addWidget(button)
         layout.addLayout(presets)
 
-        layout.addWidget(self._section("PROCESS"))
-        self._sliders: dict[str, ParameterSlider] = {
-            "target_mj": ParameterSlider("Target energy", 2.0, 8.0, 4.0, 1, " mJ"),
-            "decay_rate": ParameterSlider("Gas decay rate", 0.0, 0.02, 0.004, 3, " /pulse"),
-            "noise_sigma": ParameterSlider("Pulse-to-pulse noise", 0.0, 0.10, 0.01, 3, ""),
-            "delay": ParameterSlider("Timelog latency", 1, 3, 2, 0, " pulses"),
-        }
-        layout.addWidget(self._section("PID"))
-        self._sliders.update(
+        self._sliders: dict[str, ParameterSlider] = {}
+        self._add_group(
+            layout,
+            "PROCESS",
+            {
+                "target_mj": ParameterSlider("Target energy", 2.0, 8.0, 4.0, 1, " mJ"),
+                "decay_rate": ParameterSlider("Gas decay rate", 0.0, 0.02, 0.004, 3, " /pulse"),
+                "noise_sigma": ParameterSlider("Pulse-to-pulse noise", 0.0, 0.10, 0.01, 3, ""),
+                "delay": ParameterSlider("Timelog latency", 1, 3, 2, 0, " pulses"),
+            },
+        )
+        self._add_group(
+            layout,
+            "PID",
             {
                 "kp": ParameterSlider("Kp", 0.0, 1.5, 0.55, 2, ""),
                 "ki": ParameterSlider("Ki", 0.0, 0.30, 0.06, 3, ""),
                 "kd": ParameterSlider("Kd", 0.0, 0.20, 0.02, 3, ""),
-            }
+            },
         )
-        layout.addWidget(self._section("ITERATIVE LEARNING (ILR)"))
-        self._sliders.update(
+        self._add_group(
+            layout,
+            "ITERATIVE LEARNING (ILR)",
             {
                 "alpha": ParameterSlider("Learning factor α", 0.05, 1.0, 0.6, 2, ""),
                 "smoothing": ParameterSlider("Q-filter depth", 1, 9, 3, 0, " pulses"),
-            }
+            },
         )
-        for slider in self._sliders.values():
-            slider.valueChanged.connect(self._emit_parameters)
-            layout.addWidget(slider)
 
         layout.addStretch(1)
         export = QPushButton("⤓  Export current burst as CSV")
@@ -191,6 +201,15 @@ class ControlPanel(QFrame):
     def _on_play_toggled(self, playing: bool) -> None:
         self._play_button.setText("❚❚  Pause" if playing else "▶  Play")
         self.playToggled.emit(playing)
+
+    def _add_group(
+        self, layout: QVBoxLayout, title: str, sliders: dict[str, ParameterSlider]
+    ) -> None:
+        layout.addWidget(self._section(title))
+        for name, slider in sliders.items():
+            slider.valueChanged.connect(self._emit_parameters)
+            self._sliders[name] = slider
+            layout.addWidget(slider)
 
     @staticmethod
     def _section(title: str) -> QLabel:

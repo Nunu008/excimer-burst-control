@@ -233,15 +233,27 @@ The suite covers, among others:
 
 ## 7. Screenshots
 
-> Placeholders — capture with `python main.py` on a machine with a display and drop
-> the files into `docs/screenshots/`.
+Captured headless from the running application (`scripts/capture_screenshots.py`,
+`QT_QPA_PLATFORM=offscreen`), burst 14 of the standard preset:
+
+![Dashboard](docs/screenshots/dashboard.png)
+
+The three curves share one noise realisation: open loop droops to 3.2 mJ, the PID
+oscillates between overshoot and lag, the hybrid sits inside ±1 % once the table has
+learned the burst. Below: the actuator split (u_ff taking over, u_fb decaying to the
+noise floor) and the 10 × 10 matrix that produces it.
 
 | File | Content |
 |---|---|
-| `docs/screenshots/dashboard.png` | Full window, standard preset, burst 15 |
-| `docs/screenshots/actuator-split.png` | u_ff taking over while u_fb decays |
-| `docs/screenshots/heatmap-hover.png` | 10 × 10 matrix with hover read-out |
-| `docs/screenshots/gas-noise.png` | Strong-noise preset comparison |
+| `docs/screenshots/dashboard.png` | Full window, standard preset, burst 14 |
+| `docs/screenshots/gas-noise.png` | Strong-noise preset after 12 bursts |
+| `docs/screenshots/latency.png` | 3-pulse dead time after 10 bursts |
+
+Regenerate with:
+
+```bash
+QT_QPA_PLATFORM=offscreen python scripts/capture_screenshots.py
+```
 
 ---
 
