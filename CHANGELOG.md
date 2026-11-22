@@ -6,6 +6,8 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+## [2.0.0] - 2026-11-22
+
 ### Added
 - Project governance: issue and PR templates, CODEOWNERS, label taxonomy,
   Dependabot, contribution rules and architecture decision records.
@@ -17,6 +19,14 @@ All notable changes to this project are documented here. The format follows
 - GoogleTest suite (double and float) porting every claim of the Python suite,
   plus compile-time `static_assert` tests; host simulator `ebc_host_sim`.
 - Firmware CI: C++23, C++26 and ASan/UBSan builds.
+- Bare-metal images for the Zynq UltraScale+ APU (Cortex-A53, AArch64), the RPU
+  (Cortex-R5F, TTC interrupt at 2 kHz, code and data in TCM) and Cortex-M7
+  microcontrollers (SysTick at 2 kHz); C23 start-up and run time, type-safe MMIO.
+- CI cross-builds every image with the Arm GNU Toolchain 14.2 and runs the A53 and
+  M7 images in QEMU; the A53 output is compared number by number with the host.
+- `ebc.h`: C23 interface to the controller for C code bases.
+- Ready-to-run dashboard executables for Windows and Linux, self-tested in CI and
+  published with every release; `main.py --self-test`.
 - Cross-language parity: `scripts/export_golden.py` exports per-pulse golden
   vectors from the Python model; the C++ core reproduces them to 1e-9 (double)
   and 5e-4 (float) relative for all presets. A Python test fails when the
@@ -43,5 +53,6 @@ All notable changes to this project are documented here. The format follows
 - Test suite proving the control claims numerically; CI on Python 3.11 and 3.12.
 - Headless screenshot capture for the documentation.
 
-[Unreleased]: https://github.com/Nunu008/excimer-burst-control/compare/v1.0.0...HEAD
+[Unreleased]: https://github.com/Nunu008/excimer-burst-control/compare/v2.0.0...HEAD
+[2.0.0]: https://github.com/Nunu008/excimer-burst-control/compare/v1.0.0...v2.0.0
 [1.0.0]: https://github.com/Nunu008/excimer-burst-control/releases/tag/v1.0.0
