@@ -19,7 +19,14 @@ a = Analysis(
         "pyqtgraph.graphicsItems.PlotItem.plotConfigTemplate_pyside6",
         "pyqtgraph.imageview.ImageViewTemplate_pyside6",
     ],
-    excludes=["tkinter", "matplotlib", "scipy", "IPython", "PyQt5", "PyQt6"],
+    # pyqtgraph imports optional accelerators and file backends inside try/except.
+    # PyInstaller follows them anyway; numba alone drags in LLVM and exhausted 16 GB
+    # of RAM on a developer machine with a full scientific stack installed.
+    excludes=[
+        "tkinter", "matplotlib", "scipy", "IPython", "PyQt5", "PyQt6",
+        "numba", "llvmlite", "cupy", "h5py", "pandas", "torch", "tensorflow",
+        "OpenGL", "pyqtgraph.opengl", "pyqtgraph.examples", "pyqtgraph.jupyter",
+    ],
     noarchive=False,
 )
 pyz = PYZ(a.pure)  # noqa: F821
