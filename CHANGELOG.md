@@ -17,6 +17,10 @@ All notable changes to this project are documented here. The format follows
 - GoogleTest suite (double and float) porting every claim of the Python suite,
   plus compile-time `static_assert` tests; host simulator `ebc_host_sim`.
 - Firmware CI: C++23, C++26 and ASan/UBSan builds.
+- Cross-language parity: `scripts/export_golden.py` exports per-pulse golden
+  vectors from the Python model; the C++ core reproduces them to 1e-9 (double)
+  and 5e-4 (float) relative for all presets. A Python test fails when the
+  committed vectors are stale.
 
 ## [1.0.0] - 2026-11-21
 
