@@ -27,3 +27,9 @@ target_compile_definitions(ebc_unit_tests PRIVATE
 
 include(GoogleTest)
 gtest_discover_tests(ebc_unit_tests DISCOVERY_MODE PRE_TEST)
+
+# The controller used from plain C23 through ebc.h.
+add_executable(ebc_capi_closed_loop capi_closed_loop.c)
+target_link_libraries(ebc_capi_closed_loop PRIVATE ebc::capi ebc::warnings m)
+set_target_properties(ebc_capi_closed_loop PROPERTIES LINKER_LANGUAGE CXX)
+add_test(NAME capi_closed_loop COMMAND ebc_capi_closed_loop)

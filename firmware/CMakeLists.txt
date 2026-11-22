@@ -24,6 +24,7 @@ include(EbcFirmware)
 
 add_subdirectory(core)
 add_subdirectory(app)
+add_subdirectory(capi)
 
 if(EBC_PLATFORM STREQUAL "host")
   include(CTest)
