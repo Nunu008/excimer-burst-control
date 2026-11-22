@@ -1,25 +1,36 @@
 {
   "version": 6,
-  "cmakeMinimumRequired": { "major": 3, "minor": 25, "patch": 0 },
+  "cmakeMinimumRequired": {
+    "major": 3,
+    "minor": 25,
+    "patch": 0
+  },
   "configurePresets": [
     {
       "name": "base",
       "hidden": true,
       "generator": "Ninja",
       "binaryDir": "${sourceDir}/build/${presetName}",
-      "cacheVariables": { "CMAKE_BUILD_TYPE": "Release" }
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release"
+      }
     },
     {
       "name": "host",
       "displayName": "Host (GCC, unit tests, Python parity)",
       "inherits": "base",
-      "cacheVariables": { "EBC_PLATFORM": "host", "CMAKE_BUILD_TYPE": "Debug" }
+      "cacheVariables": {
+        "EBC_PLATFORM": "host",
+        "CMAKE_BUILD_TYPE": "Debug"
+      }
     },
     {
       "name": "host-cxx26",
       "displayName": "Host, compiled as C++26 (-std=c++2c)",
       "inherits": "host",
-      "cacheVariables": { "EBC_CXX_STANDARD": "26" }
+      "cacheVariables": {
+        "EBC_CXX_STANDARD": "26"
+      }
     },
     {
       "name": "host-sanitize",
@@ -29,45 +40,250 @@
         "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer -fno-sanitize-recover=all",
         "CMAKE_EXE_LINKER_FLAGS": "-fsanitize=address,undefined"
       }
+    },
+    {
+      "name": "zynqmp-a53",
+      "displayName": "Zynq UltraScale+ APU, Cortex-A53 (AArch64)",
+      "inherits": "base",
+      "toolchainFile": "${sourceDir}/cmake/toolchains/aarch64-zynqmp-a53.cmake",
+      "cacheVariables": {
+        "EBC_PLATFORM": "zynqmp_a53",
+        "EBC_SEMIHOSTING": "ON",
+        "CMAKE_BUILD_TYPE": "Release"
+      }
+    },
+    {
+      "name": "zynqmp-a53-board",
+      "displayName": "Zynq UltraScale+ APU, Cortex-A53 (AArch64), no semihosting (stand-alone board)",
+      "inherits": "zynqmp-a53",
+      "cacheVariables": {
+        "EBC_SEMIHOSTING": "OFF"
+      }
+    },
+    {
+      "name": "zynqmp-r5f",
+      "displayName": "Zynq UltraScale+ RPU, Cortex-R5F (ARMv7-R)",
+      "inherits": "base",
+      "toolchainFile": "${sourceDir}/cmake/toolchains/arm-zynqmp-r5f.cmake",
+      "cacheVariables": {
+        "EBC_PLATFORM": "zynqmp_r5f",
+        "EBC_SEMIHOSTING": "ON",
+        "CMAKE_BUILD_TYPE": "Release"
+      }
+    },
+    {
+      "name": "zynqmp-r5f-board",
+      "displayName": "Zynq UltraScale+ RPU, Cortex-R5F (ARMv7-R), no semihosting (stand-alone board)",
+      "inherits": "zynqmp-r5f",
+      "cacheVariables": {
+        "EBC_SEMIHOSTING": "OFF"
+      }
+    },
+    {
+      "name": "cortex-m7",
+      "displayName": "Cortex-M7 microcontroller (MPS2 AN500 / STM32H7 class)",
+      "inherits": "base",
+      "toolchainFile": "${sourceDir}/cmake/toolchains/arm-cortex-m7.cmake",
+      "cacheVariables": {
+        "EBC_PLATFORM": "cortex_m7",
+        "EBC_SEMIHOSTING": "ON",
+        "CMAKE_BUILD_TYPE": "Release"
+      }
+    },
+    {
+      "name": "cortex-m7-board",
+      "displayName": "Cortex-M7 microcontroller (MPS2 AN500 / STM32H7 class), no semihosting (stand-alone board)",
+      "inherits": "cortex-m7",
+      "cacheVariables": {
+        "EBC_SEMIHOSTING": "OFF"
+      }
     }
   ],
   "buildPresets": [
-    { "name": "host", "configurePreset": "host" },
-    { "name": "host-cxx26", "configurePreset": "host-cxx26" },
-    { "name": "host-sanitize", "configurePreset": "host-sanitize" }
+    {
+      "name": "host",
+      "configurePreset": "host"
+    },
+    {
+      "name": "host-cxx26",
+      "configurePreset": "host-cxx26"
+    },
+    {
+      "name": "host-sanitize",
+      "configurePreset": "host-sanitize"
+    },
+    {
+      "name": "zynqmp-a53",
+      "configurePreset": "zynqmp-a53"
+    },
+    {
+      "name": "zynqmp-a53-board",
+      "configurePreset": "zynqmp-a53-board"
+    },
+    {
+      "name": "zynqmp-r5f",
+      "configurePreset": "zynqmp-r5f"
+    },
+    {
+      "name": "zynqmp-r5f-board",
+      "configurePreset": "zynqmp-r5f-board"
+    },
+    {
+      "name": "cortex-m7",
+      "configurePreset": "cortex-m7"
+    },
+    {
+      "name": "cortex-m7-board",
+      "configurePreset": "cortex-m7-board"
+    }
   ],
   "testPresets": [
     {
       "name": "host",
       "configurePreset": "host",
-      "output": { "outputOnFailure": true }
+      "output": {
+        "outputOnFailure": true
+      }
     },
-    { "name": "host-cxx26", "inherits": "host", "configurePreset": "host-cxx26" },
-    { "name": "host-sanitize", "inherits": "host", "configurePreset": "host-sanitize" }
+    {
+      "name": "host-cxx26",
+      "inherits": "host",
+      "configurePreset": "host-cxx26"
+    },
+    {
+      "name": "host-sanitize",
+      "inherits": "host",
+      "configurePreset": "host-sanitize"
+    }
   ],
   "workflowPresets": [
     {
       "name": "host",
       "steps": [
-        { "type": "configure", "name": "host" },
-        { "type": "build", "name": "host" },
-        { "type": "test", "name": "host" }
+        {
+          "type": "configure",
+          "name": "host"
+        },
+        {
+          "type": "build",
+          "name": "host"
+        },
+        {
+          "type": "test",
+          "name": "host"
+        }
       ]
     },
     {
       "name": "host-cxx26",
       "steps": [
-        { "type": "configure", "name": "host-cxx26" },
-        { "type": "build", "name": "host-cxx26" },
-        { "type": "test", "name": "host-cxx26" }
+        {
+          "type": "configure",
+          "name": "host-cxx26"
+        },
+        {
+          "type": "build",
+          "name": "host-cxx26"
+        },
+        {
+          "type": "test",
+          "name": "host-cxx26"
+        }
       ]
     },
     {
       "name": "host-sanitize",
       "steps": [
-        { "type": "configure", "name": "host-sanitize" },
-        { "type": "build", "name": "host-sanitize" },
-        { "type": "test", "name": "host-sanitize" }
+        {
+          "type": "configure",
+          "name": "host-sanitize"
+        },
+        {
+          "type": "build",
+          "name": "host-sanitize"
+        },
+        {
+          "type": "test",
+          "name": "host-sanitize"
+        }
+      ]
+    },
+    {
+      "name": "zynqmp-a53",
+      "steps": [
+        {
+          "type": "configure",
+          "name": "zynqmp-a53"
+        },
+        {
+          "type": "build",
+          "name": "zynqmp-a53"
+        }
+      ]
+    },
+    {
+      "name": "zynqmp-a53-board",
+      "steps": [
+        {
+          "type": "configure",
+          "name": "zynqmp-a53-board"
+        },
+        {
+          "type": "build",
+          "name": "zynqmp-a53-board"
+        }
+      ]
+    },
+    {
+      "name": "zynqmp-r5f",
+      "steps": [
+        {
+          "type": "configure",
+          "name": "zynqmp-r5f"
+        },
+        {
+          "type": "build",
+          "name": "zynqmp-r5f"
+        }
+      ]
+    },
+    {
+      "name": "zynqmp-r5f-board",
+      "steps": [
+        {
+          "type": "configure",
+          "name": "zynqmp-r5f-board"
+        },
+        {
+          "type": "build",
+          "name": "zynqmp-r5f-board"
+        }
+      ]
+    },
+    {
+      "name": "cortex-m7",
+      "steps": [
+        {
+          "type": "configure",
+          "name": "cortex-m7"
+        },
+        {
+          "type": "build",
+          "name": "cortex-m7"
+        }
+      ]
+    },
+    {
+      "name": "cortex-m7-board",
+      "steps": [
+        {
+          "type": "configure",
+          "name": "cortex-m7-board"
+        },
+        {
+          "type": "build",
+          "name": "cortex-m7-board"
+        }
       ]
     }
   ]

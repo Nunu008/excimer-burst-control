@@ -12,6 +12,9 @@ concurrency:
   group: firmware-${{ github.ref }}
   cancel-in-progress: true
 
+env:
+  ARM_GNU_VERSION: "14.2.rel1"
+
 jobs:
   host:
     name: Host tests (${{ matrix.preset }})
@@ -30,3 +33,105 @@ jobs:
       - name: Configure, build, test
         working-directory: firmware
         run: cmake --workflow --preset ${{ matrix.preset }}
+      - name: Host log for the cross-target comparison
+        if: matrix.preset == 'host'
+        working-directory: firmware
+        run: ./build/host/bsp/host/ebc_host_sim --bursts 20 --float | tee host_float.csv
+      - uses: actions/upload-artifact@v4
+        if: matrix.preset == 'host'
+        with:
+          name: host-float-log
+          path: firmware/host_float.csv
+
+  cross:
+    name: ${{ matrix.name }}
+    needs: host
+    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: Zynq UltraScale+ APU (Cortex-A53)
+            preset: zynqmp-a53
+            target: zynqmp_a53
+            triple: aarch64-none-elf
+            run_qemu: true
+            experimental: false
+          - name: Zynq UltraScale+ RPU (Cortex-R5F)
+            preset: zynqmp-r5f
+            target: zynqmp_r5f
+            triple: arm-none-eabi
+            run_qemu: true
+            experimental: true   # QEMU's ZynqMP model does not model the RPU TCMs/boot fully
+          - name: Cortex-M7 (MPS2 AN500)
+            preset: cortex-m7
+            target: cortex_m7
+            triple: arm-none-eabi
+            run_qemu: true
+            experimental: false
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Cache Arm GNU Toolchain
+        id: toolchain-cache
+        uses: actions/cache@v4
+        with:
+          path: /opt/arm-gnu-toolchain
+          key: arm-gnu-${{ env.ARM_GNU_VERSION }}-${{ matrix.triple }}
+
+      - name: Download Arm GNU Toolchain ${{ env.ARM_GNU_VERSION }} (${{ matrix.triple }})
+        if: steps.toolchain-cache.outputs.cache-hit != 'true'
+        run: |
+          base="https://developer.arm.com/-/media/Files/downloads/gnu/${ARM_GNU_VERSION}/binrel"
+          sudo mkdir -p /opt/arm-gnu-toolchain
+          curl -fsSL "${base}/arm-gnu-toolchain-${ARM_GNU_VERSION}-x86_64-${{ matrix.triple }}.tar.xz" \
+            | sudo tar -xJ -C /opt/arm-gnu-toolchain --strip-components=1
+
+      - name: Install Ninja and QEMU
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends ninja-build qemu-system-arm
+          echo "/opt/arm-gnu-toolchain/bin" >> "$GITHUB_PATH"
+
+      - name: Build ${{ matrix.preset }} (C++23 / C23, -Werror)
+        working-directory: firmware
+        run: |
+          ${{ matrix.triple }}-g++ --version | head -1
+          cmake --workflow --preset ${{ matrix.preset }}
+
+      - name: Worst-case stack usage (from -fstack-usage)
+        working-directory: firmware
+        run: |
+          find build/${{ matrix.preset }} -name '*.su' -exec cat {} + \
+            | sort -t$'\t' -k2 -n -r | head -10
+
+      - name: Run in QEMU
+        if: matrix.run_qemu
+        continue-on-error: ${{ matrix.experimental }}
+        working-directory: firmware
+        run: |
+          python3 tools/run_qemu.py ${{ matrix.target }} \
+            build/${{ matrix.preset }}/bsp/${{ matrix.target }}/ebc_${{ matrix.target }}.elf \
+            --log qemu_${{ matrix.target }}.log
+
+      - uses: actions/download-artifact@v4
+        if: matrix.target == 'zynqmp_a53'
+        with:
+          name: host-float-log
+          path: firmware
+
+      - name: Cortex-A53 computes the same bursts as the host build
+        if: matrix.target == 'zynqmp_a53'
+        working-directory: firmware
+        run: python3 tools/compare_logs.py host_float.csv qemu_zynqmp_a53.log
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: firmware-${{ matrix.target }}
+          path: |
+            firmware/build/${{ matrix.preset }}/bsp/${{ matrix.target }}/*.elf
+            firmware/build/${{ matrix.preset }}/bsp/${{ matrix.target }}/*.bin
+            firmware/build/${{ matrix.preset }}/bsp/${{ matrix.target }}/*.map
+            firmware/qemu_*.log
+          if-no-files-found: ignore
