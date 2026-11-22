@@ -6,6 +6,7 @@ name: Release
 on:
   push:
     tags: ["v*"]
+    branches: [ci/exe-preview]   # preview builds for testing; publish job runs on tags only
   workflow_dispatch:
 
 permissions:
