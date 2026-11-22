@@ -1,0 +1,26 @@
+Excimer Burst Energy Control - quick start
+==========================================
+
+Start the dashboard
+  Windows : double-click ExcimerBurstControl.exe
+            (unsigned build: on the SmartScreen prompt choose "More info" -> "Run anyway")
+  Linux   : chmod +x ExcimerBurstControl && ./ExcimerBurstControl
+            needs the usual desktop Qt libraries, on Debian/Ubuntu:
+            sudo apt install libegl1 libxkbcommon-x11-0 libxcb-cursor0
+
+What to try (about one minute)
+  Space        play / pause, 25 bursts per second
+  Right arrow  one burst
+  Ctrl+R       reset
+  Presets      "Strong gas noise" and "High latency (3 pulses)" in the left panel
+
+Watch the cyan curve (hybrid ILC + PID) settle inside +/-1 % within a few bursts,
+while the red PID curve keeps fighting the same transient every burst, and the
+10 x 10 heat map learn the burst profile.
+
+Check the build yourself
+  ExcimerBurstControl --self-test --report selftest.txt
+  runs 60 bursts through the real window and writes PASS/FAIL to selftest.txt.
+
+Source, firmware for Zynq UltraScale+ / Cortex-M7 and documentation:
+  see the repository README.

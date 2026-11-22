@@ -28,6 +28,7 @@ from ..core.simulation import (
     MODE_LABELS,
     MODE_OPEN_LOOP,
     MODE_PID,
+    BurstSnapshot,
     SimulationEngine,
 )
 from .theme import TEXT_MUTED
@@ -136,6 +137,17 @@ class MainWindow(QMainWindow):
 
     def _toggle_play(self) -> None:
         self._on_play_toggled(not self._playing)
+
+    # ------------------------------------------------------------- public API
+
+    @property
+    def snapshot(self) -> BurstSnapshot:
+        """The burst currently shown."""
+        return self._snapshot
+
+    def advance(self, bursts: int) -> None:
+        """Simulate ``bursts`` bursts and refresh every view (what the timer does)."""
+        self._advance(bursts)
 
     def _advance(self, bursts: int) -> None:
         if bursts <= 0:
