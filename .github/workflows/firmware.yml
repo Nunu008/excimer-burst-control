@@ -1,0 +1,32 @@
+name: Firmware
+
+on:
+  push:
+    branches: [main]
+    paths: ["firmware/**", "src/core/**", "scripts/export_golden.py", ".github/workflows/firmware.yml"]
+  pull_request:
+    paths: ["firmware/**", "src/core/**", "scripts/export_golden.py", ".github/workflows/firmware.yml"]
+  workflow_dispatch:
+
+concurrency:
+  group: firmware-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  host:
+    name: Host tests (${{ matrix.preset }})
+    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        preset: [host, host-cxx26, host-sanitize]
+    env:
+      CC: gcc-14
+      CXX: g++-14
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Ninja
+        run: sudo apt-get update && sudo apt-get install -y --no-install-recommends ninja-build
+      - name: Configure, build, test
+        working-directory: firmware
+        run: cmake --workflow --preset ${{ matrix.preset }}

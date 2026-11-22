@@ -9,6 +9,14 @@ All notable changes to this project are documented here. The format follows
 ### Added
 - Project governance: issue and PR templates, CODEOWNERS, label taxonomy,
   Dependabot, contribution rules and architecture decision records.
+- `firmware/core`: header-only C++23 port of the control law (PID, ILC with
+  Q-filter, Timelog dead time, plant model, KPIs) templated on the scalar type,
+  without heap, exceptions or RTTI.
+- Interrupt-safe `RealtimeController` with a double-buffered learning table and a
+  wait-free hand-over between the pulse interrupt and the learning task.
+- GoogleTest suite (double and float) porting every claim of the Python suite,
+  plus compile-time `static_assert` tests; host simulator `ebc_host_sim`.
+- Firmware CI: C++23, C++26 and ASan/UBSan builds.
 
 ## [1.0.0] - 2026-11-21
 
