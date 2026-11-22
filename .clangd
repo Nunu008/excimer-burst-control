@@ -1,0 +1,4 @@
+# clangd (VS Code / CLion / Neovim) reads the compile flags of the host build.
+# Run `cmake --preset host` once inside firmware/ to generate them.
+CompileFlags:
+  CompilationDatabase: firmware/build/host

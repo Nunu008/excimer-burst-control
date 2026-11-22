@@ -18,9 +18,10 @@ add_executable(ebc_unit_tests
   test_noise.cpp
   test_lockstep_engine.cpp
   test_realtime_controller.cpp
-  test_python_parity.cpp)
+  test_python_parity.cpp
+  test_app.cpp)
 
-target_link_libraries(ebc_unit_tests PRIVATE ebc::core ebc::warnings GTest::gtest_main)
+target_link_libraries(ebc_unit_tests PRIVATE ebc::core ebc::app ebc::warnings GTest::gtest_main)
 target_compile_definitions(ebc_unit_tests PRIVATE
   EBC_GOLDEN_DIR="${CMAKE_CURRENT_SOURCE_DIR}/golden")
 

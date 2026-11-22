@@ -22,6 +22,7 @@ list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 include(EbcWarnings)
 
 add_subdirectory(core)
+add_subdirectory(app)
 
 if(EBC_PLATFORM STREQUAL "host")
   include(CTest)

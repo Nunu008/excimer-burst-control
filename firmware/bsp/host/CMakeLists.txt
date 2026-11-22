@@ -1,15 +1,12 @@
-# Host build of the firmware loop: the same control code, a POSIX/Windows main().
+# Host build of the firmware application: the same code as the Cortex-A53 image,
+# with a stdout sink instead of the PS UART.
 add_executable(ebc_host_sim main.cpp)
-target_link_libraries(ebc_host_sim PRIVATE ebc::core ebc::warnings)
-
-# libstdc++ 14/15 ships the Windows console part of std::print in libstdc++exp.
-if(MINGW AND CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-  target_link_libraries(ebc_host_sim PRIVATE stdc++exp)
-endif()
+target_link_libraries(ebc_host_sim PRIVATE ebc::app ebc::warnings)
 
 if(BUILD_TESTING)
-  add_test(NAME host_sim_smoke COMMAND ebc_host_sim --bursts 15)
-  # Burst 14 of the standard preset: the hybrid must be inside 5 % max deviation.
-  set_tests_properties(host_sim_smoke PROPERTIES
-    PASS_REGULAR_EXPRESSION "\n14,hybrid_ilr_pid,[0-4]\\.[0-9]+,")
+  # The verdict (hybrid < 5 % max deviation and < 0.5 x PID RMS at the last burst)
+  # is the exit code, exactly as the target images report it through semihosting.
+  add_test(NAME host_sim_standard COMMAND ebc_host_sim --bursts 15)
+  add_test(NAME host_sim_standard_float COMMAND ebc_host_sim --bursts 15 --float)
+  add_test(NAME host_sim_latency COMMAND ebc_host_sim --bursts 15 --preset latency)
 endif()
