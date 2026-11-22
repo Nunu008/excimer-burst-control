@@ -1,0 +1,74 @@
+{
+  "version": 6,
+  "cmakeMinimumRequired": { "major": 3, "minor": 25, "patch": 0 },
+  "configurePresets": [
+    {
+      "name": "base",
+      "hidden": true,
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/build/${presetName}",
+      "cacheVariables": { "CMAKE_BUILD_TYPE": "Release" }
+    },
+    {
+      "name": "host",
+      "displayName": "Host (GCC, unit tests, Python parity)",
+      "inherits": "base",
+      "cacheVariables": { "EBC_PLATFORM": "host", "CMAKE_BUILD_TYPE": "Debug" }
+    },
+    {
+      "name": "host-cxx26",
+      "displayName": "Host, compiled as C++26 (-std=c++2c)",
+      "inherits": "host",
+      "cacheVariables": { "EBC_CXX_STANDARD": "26" }
+    },
+    {
+      "name": "host-sanitize",
+      "displayName": "Host with AddressSanitizer + UBSan",
+      "inherits": "host",
+      "cacheVariables": {
+        "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer -fno-sanitize-recover=all",
+        "CMAKE_EXE_LINKER_FLAGS": "-fsanitize=address,undefined"
+      }
+    }
+  ],
+  "buildPresets": [
+    { "name": "host", "configurePreset": "host" },
+    { "name": "host-cxx26", "configurePreset": "host-cxx26" },
+    { "name": "host-sanitize", "configurePreset": "host-sanitize" }
+  ],
+  "testPresets": [
+    {
+      "name": "host",
+      "configurePreset": "host",
+      "output": { "outputOnFailure": true }
+    },
+    { "name": "host-cxx26", "inherits": "host", "configurePreset": "host-cxx26" },
+    { "name": "host-sanitize", "inherits": "host", "configurePreset": "host-sanitize" }
+  ],
+  "workflowPresets": [
+    {
+      "name": "host",
+      "steps": [
+        { "type": "configure", "name": "host" },
+        { "type": "build", "name": "host" },
+        { "type": "test", "name": "host" }
+      ]
+    },
+    {
+      "name": "host-cxx26",
+      "steps": [
+        { "type": "configure", "name": "host-cxx26" },
+        { "type": "build", "name": "host-cxx26" },
+        { "type": "test", "name": "host-cxx26" }
+      ]
+    },
+    {
+      "name": "host-sanitize",
+      "steps": [
+        { "type": "configure", "name": "host-sanitize" },
+        { "type": "build", "name": "host-sanitize" },
+        { "type": "test", "name": "host-sanitize" }
+      ]
+    }
+  ]
+}
