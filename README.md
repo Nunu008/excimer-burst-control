@@ -126,18 +126,17 @@ The feedforward matrix holds one command per pulse of the burst, laid out as a
 **10 × 10 grid** (100 pulses). After each burst:
 
 $$
-u_{ff,k+1}[i] = u_{ff,k}[i] + \alpha \cdot Q\!\left(e_k\right)[i],
+u_{ff,k+1} = Q\!\left(u_{ff,k} + \alpha \, e_k\right),
 \qquad
-Q(e)[i] = \frac{1}{q}\sum_{j=-\lfloor q/2\rfloor}^{\lceil q/2\rceil - 1} e[i+j]
+Q(x)[i] = \frac{1}{q}\sum_{j=-\lfloor q/2\rfloor}^{\lceil q/2\rceil - 1} x[i+j]
 $$
 
 `α` is the learning factor, `Q` the Q-filter (centred moving average of depth `q`)
 that keeps pulse noise out of the learned table. Because the disturbance is
-repetitive and the plant gain is unity in these coordinates, the recursion converges
-geometrically with rate `(1-α)`:
+repetitive, the recursion converges towards the inverse efficiency profile:
 
 $$
-u_{ff,\infty}[i] = \frac{E_{target}}{\eta(i)}
+u_{ff,\infty}[i] \approx \frac{E_{target}}{\eta(i)}
 $$
 
 The hybrid command is `u = u_ff[i] + u_fb[k]`, so as the table converges the PID term
@@ -146,11 +145,20 @@ physically meaningful the hybrid's integrator is reset at every burst boundary: 
 repetitive part belongs to the learner, and a cross-burst integral would otherwise
 silently carry a constant offset that the table can never absorb.
 
-In the noise-free case the fixed point is reached to better than 1 % after ~25 bursts
-(verified by `test_learned_profile_approaches_inverse_efficiency`). With pulse noise
-the table fluctuates around it because every update injects `α · σ` into the matrix;
-the residual spread is bounded (~4 % at σ = 1 %, α = 0.6) rather than random-walking
-away — this is exactly the trade-off the Q-filter and a moderate α are there for.
+**Why `Q` filters the whole update, not just the error.** The PID acts *inside* the
+burst through the Timelog dead time, so the map from the table to the energy is not
+the plant alone but the lifted closed loop `G` (`src/core/stability.py`). Version 1.0
+used `u + α·Q(e)`; its error propagation `I − αQG` has a spectral radius of 1.10
+(standard) to 1.26 (3-pulse latency). The divergence is invisible over the first 15
+bursts and reaches 177 % max deviation after 200. The robust form `Q(u + αe)` is a
+2-norm contraction, `‖Q(I − αG)‖₂ ≈ 0.92 < 1`, in every preset, so it converges
+monotonically. The price is a bounded bias where the table cannot follow the sharp
+start transient: −2.2 % on pulse 0, below 0.5 % on every other pulse (ADR 0004,
+`tests/test_stability.py`).
+
+With pulse noise the table fluctuates around the fixed point because every update
+injects `α · σ`; the Q-filter on the full update also low-passes that injection, and
+the hybrid stays inside 0.08 mJ RMS for 200 bursts.
 
 ### 3.4 KPIs
 
@@ -171,12 +179,14 @@ the 1 % pulse noise.
 | Burst | Open loop | PID only | Hybrid |
 |---|---|---|---|
 | 0 | 21.5 % max dev | 9.2 % | 9.2 % (identical start) |
-| 5 | 22.2 % | 19.6 % | 5.9 % |
-| 14 | 21.8 % | 18.2 % | **3.6 %**, RMS 0.054 mJ |
+| 5 | 22.2 % | 19.6 % | 6.1 % |
+| 14 | 21.8 % | 18.2 % | **3.8 %**, RMS 0.052 mJ |
+| 199 | 20.5 % | 19.4 % | **3.5 %**, RMS 0.046 mJ |
 
-Measured with the default preset (100 pulses, 2-pulse dead time, α = 0.6, q = 3),
-5-burst mean |u_fb| drops from 0.28 to 0.03 mJ-eq. The PID keeps re-fighting the same
-transient every burst; the learned table does not forget.
+Measured with the default preset (100 pulses, 2-pulse dead time, α = 0.6, q = 3).
+Mean |u_fb| drops from 0.28 mJ-eq (burst 0) to 0.03 (bursts 10–14). The PID keeps
+re-fighting the same transient every burst; the learned table does not forget, and
+since 2.0 it also does not drift.
 
 ---
 
@@ -207,7 +217,8 @@ Tested with Python 3.11/3.12, PySide6 ≥ 6.6, pyqtgraph ≥ 0.13, numpy ≥ 1.2
 * **Strong gas noise** — 4 % pulse noise, faster decay: the PID visibly drowns, the
   Q-filter earns its keep.
 * **High latency (3 pulses)** — dead time at the spec limit: the PID rings, the
-  learned feedforward still holds the burst. Push `Kp` above ≈1.0 here to drive the
+  learned feedforward still holds the burst (indefinitely since the 2.0 learning
+  law; 1.0 diverged here after ~12 bursts). Push `Kp` above ≈1.0 here to drive the
   loop into visible instability — that is the honest limit of feedback with dead time.
 
 ---
@@ -223,7 +234,9 @@ python -m ruff check src tests main.py
 The suite covers, among others:
 
 * monotonic convergence of the ILR matrix over bursts
-* convergence of the learned profile to `E_target / η(i)` within 3 %
+* convergence of the learned profile to `E_target / η(i)` within 1 % (2.5 % on pulse 0)
+* lifted-system proof that the learning law is a contraction for every preset, and
+  200-burst runs that stay converged
 * boundedness/stability of the PID loop over 20 bursts
 * hybrid RMS < 50 % of PID RMS and < 40 % of open-loop RMS after convergence
 * dead-time handling (no feedback before pulse `L`)

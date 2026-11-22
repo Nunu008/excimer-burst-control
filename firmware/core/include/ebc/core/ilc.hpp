@@ -3,7 +3,11 @@
 // Iterative Learning Control on a per-pulse feedforward table. Mirrors
 // `src/core/controllers.py::IterativeLearningController`.
 //
-//     u_ff,k+1[i] = max(0, u_ff,k[i] + alpha * Q(e_k)[i])
+//     u_ff,k+1 = max(0, Q(u_ff,k + alpha * e_k))
+//
+// The Q-filter acts on the whole update (robust ILC form). With the PID and its
+// dead time inside the loop this is a contraction, ||Q(I - alpha G)||_2 < 1, for
+// every preset; filtering only the error diverges (ADR 0004).
 #pragma once
 
 #include <array>
@@ -20,19 +24,20 @@ namespace ebc {
 /// One learning step as a pure function, shared by the single-buffered controller
 /// used in simulation and the double-buffered `TableBank` used under interrupts.
 ///
-/// `current` and `next` may refer to the same table: every element is read before
-/// it is written. Returns the largest absolute correction before clamping, the
-/// same quantity the Python implementation reports.
+/// `current` and `next` may refer to the same table: `current` is fully consumed
+/// into a local buffer before `next` is written. Returns the largest absolute
+/// correction before clamping, the same quantity the Python implementation reports.
 template <Real T, std::size_t N>
 constexpr T ilc_update(const IlcParams<T>& params, std::span<const T, N> current,
                        std::span<const T, N> errors, std::span<T, N> next) noexcept {
+  std::array<T, N> proposed{};
+  for (std::size_t i = 0; i < N; ++i) proposed[i] = current[i] + params.learning_rate * errors[i];
   std::array<T, N> filtered{};
-  centred_moving_average<T, N>(errors, filtered, params.q_filter_depth);
+  centred_moving_average<T, N>(proposed, filtered, params.q_filter_depth);
   T largest{0};
   for (std::size_t i = 0; i < N; ++i) {
-    const T delta = params.learning_rate * filtered[i];
-    next[i] = max(T{0}, current[i] + delta);
-    largest = max(largest, abs(delta));
+    largest = max(largest, abs(filtered[i] - current[i]));
+    next[i] = max(T{0}, filtered[i]);
   }
   return largest;
 }

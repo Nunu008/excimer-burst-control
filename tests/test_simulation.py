@@ -96,9 +96,12 @@ def test_learned_profile_approaches_inverse_efficiency() -> None:
 
     profile = engine.matrix.reshape(-1)
     target = config.plant.target_energy_mj
-    for index in (0, 1, 25, 60, 99):
+    for index in (1, 25, 60, 99):
         expected = target / config.plant.efficiency(index)
         assert profile[index] == pytest.approx(expected, rel=0.01)
+    # The Q-filter cannot follow the 3-pulse start transient at the burst edge: the
+    # robust law trades a bounded bias on pulse 0 for guaranteed convergence (ADR 0004).
+    assert profile[0] == pytest.approx(target / config.plant.efficiency(0), rel=0.025)
 
 
 def test_feedback_share_decays_while_the_table_takes_over() -> None:

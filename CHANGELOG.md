@@ -22,6 +22,17 @@ All notable changes to this project are documented here. The format follows
   and 5e-4 (float) relative for all presets. A Python test fails when the
   committed vectors are stale.
 
+### Fixed
+- **Learning-law divergence.** The 1.0 update `u + α·Q(e)` has a spectral radius
+  above one once the PID acts inside the burst (1.10 standard, 1.26 latency) and
+  diverged after a few dozen bursts (177 % max deviation at burst 200). It is
+  replaced by the robust form `Q(u + α·e)`, a 2-norm contraction (0.92) in every
+  preset (ADR 0004). Found by the C++ port's acceptance check.
+
+### Added (analysis)
+- `src/core/stability.py`: lifted closed-loop map and convergence figures, with tests
+  asserting the contraction and 200-burst regression runs in Python and C++.
+
 ## [1.0.0] - 2026-11-21
 
 ### Added

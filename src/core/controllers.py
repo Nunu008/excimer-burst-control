@@ -63,10 +63,14 @@ class IterativeLearningController:
     ``i`` inside the burst.  After each burst the profile is corrected by the
     observed error::
 
-        u_ff,k+1[i] = u_ff,k[i] + alpha * Q(e_k)[i]
+        u_ff,k+1 = Q(u_ff,k + alpha * e_k)
 
-    where ``Q`` is a centred moving average (the Q-filter) that suppresses
-    pulse-to-pulse noise in the learned profile.
+    where ``Q`` is a centred moving average (the Q-filter). Applying ``Q`` to the
+    whole update, not only to the error, is the robust ILC form: with the PID and
+    its dead time inside the loop, ``||Q (I - alpha G)||_2 < 1`` holds for every
+    preset, so the learning converges monotonically. Filtering only the error
+    (``u_ff + alpha * Q(e)``) has a spectral radius above one and diverges after
+    a few dozen bursts (see ADR 0004 and ``scripts/ilc_stability.py``).
     """
 
     def __init__(self, config: ILRConfig, initial_command: float, pulses_per_burst: int) -> None:
@@ -119,9 +123,11 @@ class IterativeLearningController:
         if error_array.size != self._pulses:
             raise ValueError(f"expected {self._pulses} errors, got {error_array.size}")
 
-        filtered = moving_average(error_array, self._config.smoothing_depth)
-        delta = self._config.learning_rate * filtered.reshape(self._config.grid_shape)
-        self._matrix = np.maximum(self._matrix + delta, 0.0)
+        current = self._matrix.reshape(-1)
+        proposed = current + self._config.learning_rate * error_array
+        updated = moving_average(proposed, self._config.smoothing_depth)
+        delta = updated - current
+        self._matrix = np.maximum(updated, 0.0).reshape(self._config.grid_shape)
         self._bursts_learned += 1
         return float(np.max(np.abs(delta))) if delta.size else 0.0
 

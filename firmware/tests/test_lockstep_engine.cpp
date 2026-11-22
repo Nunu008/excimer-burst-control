@@ -111,9 +111,25 @@ TYPED_TEST(LockstepEngineTest, LearnedProfileApproachesInverseEfficiency) {
   const auto params = TestFixture::noise_free();
   std::unique_ptr<typename TestFixture::Engine> engine;
   (void)TestFixture::run(params, 25, &engine);
-  for (const std::size_t i : {0U, 1U, 25U, 60U, 99U}) {
-    const T expected = params.plant.target_energy_mj / ebc::gas_efficiency(params.plant, i);
-    EXPECT_NEAR(engine->learning().command(i), expected, ebc::real<T>(0.01) * expected) << "pulse " << i;
+  const auto ideal = [&](std::size_t i) {
+    return params.plant.target_energy_mj / ebc::gas_efficiency(params.plant, i);
+  };
+  for (const std::size_t i : {1U, 25U, 60U, 99U}) {
+    EXPECT_NEAR(engine->learning().command(i), ideal(i), ebc::real<T>(0.01) * ideal(i)) << i;
+  }
+  // Bounded Q-filter bias at the burst edge, the price of guaranteed convergence.
+  EXPECT_NEAR(engine->learning().command(0), ideal(0), ebc::real<T>(0.025) * ideal(0));
+}
+
+TYPED_TEST(LockstepEngineTest, HybridStaysConvergedOver200Bursts) {
+  // Regression test for the divergence of the error-filtered learning law (ADR 0004).
+  using T = TypeParam;
+  for (const auto preset : {ebc::Preset::standard, ebc::Preset::high_latency}) {
+    const auto runs = TestFixture::run(ebc::make_preset<T>(preset), 200);
+    for (std::size_t b = 15; b < runs.size(); ++b) {
+      ASSERT_LT(runs[b].result(Strategy::hybrid_ilc_pid).kpis.rms_mj, ebc::real<T>(0.08))
+          << "burst " << b;
+    }
   }
 }
 
