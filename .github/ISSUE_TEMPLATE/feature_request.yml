@@ -1,0 +1,27 @@
+name: Feature / work package
+description: A planned piece of work with a measurable acceptance criterion.
+labels: ["type: feature", "status: triage"]
+body:
+  - type: textarea
+    id: motivation
+    attributes:
+      label: Motivation
+      description: Which engineering or process problem does this solve?
+    validations:
+      required: true
+  - type: textarea
+    id: scope
+    attributes:
+      label: Scope
+      description: What is in, and explicitly what is out.
+    validations:
+      required: true
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Acceptance criteria
+      description: Checkable statements, ideally backed by a test or a CI job.
+      value: |
+        - [ ]
+    validations:
+      required: true

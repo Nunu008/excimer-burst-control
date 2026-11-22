@@ -1,0 +1,7 @@
+# Every change is reviewed by the maintainer. Paths are listed separately so that a
+# second reviewer can be added per area without touching the rest.
+*                       @Nunu008
+/src/core/              @Nunu008
+/firmware/core/         @Nunu008
+/firmware/bsp/          @Nunu008
+/.github/               @Nunu008

@@ -1,0 +1,18 @@
+# Label set of the repository (applied with `gh label create --force`, see
+# docs/project-management.md). Kept in the repo so the taxonomy is reviewed like code.
+- { name: "type: feature",      color: "1d76db", description: "New capability" }
+- { name: "type: bug",          color: "d73a4a", description: "Behaviour differs from the documentation" }
+- { name: "type: test",         color: "0e8a16", description: "Verification only" }
+- { name: "type: docs",         color: "0075ca", description: "Documentation" }
+- { name: "type: dependencies", color: "cfd3d7", description: "Dependency updates" }
+- { name: "area: control",      color: "5319e7", description: "Control law, plant model, KPIs" }
+- { name: "area: firmware",     color: "b60205", description: "Bare-metal C/C++ code" }
+- { name: "area: bsp",          color: "e99695", description: "Board support: startup, linker, drivers" }
+- { name: "area: python",       color: "fbca04", description: "Python reference model and UI" }
+- { name: "area: ci",           color: "c2e0c6", description: "Workflows and tooling" }
+- { name: "target: zynqmp-a53", color: "f9d0c4", description: "Zynq UltraScale+ APU, Cortex-A53, AArch64" }
+- { name: "target: zynqmp-r5f", color: "f9d0c4", description: "Zynq UltraScale+ RPU, Cortex-R5F, ARMv7-R" }
+- { name: "target: cortex-m7",  color: "f9d0c4", description: "Cortex-M7 microcontrollers" }
+- { name: "status: triage",     color: "ededed", description: "Not yet planned" }
+- { name: "status: blocked",    color: "000000", description: "Waiting on hardware or a decision" }
+- { name: "needs: hardware",    color: "ff7619", description: "Can only be closed on a real board" }

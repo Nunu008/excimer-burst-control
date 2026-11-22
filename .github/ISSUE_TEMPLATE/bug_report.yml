@@ -1,0 +1,39 @@
+name: Bug report
+description: Something computes, builds or runs differently from what the docs say.
+labels: ["type: bug", "status: triage"]
+body:
+  - type: dropdown
+    id: component
+    attributes:
+      label: Component
+      options:
+        - Python reference model (src/core)
+        - Dashboard UI (src/ui)
+        - Firmware core (firmware/core)
+        - BSP Zynq UltraScale+ APU (Cortex-A53)
+        - BSP Zynq UltraScale+ RPU (Cortex-R5F)
+        - BSP Cortex-M7
+        - Telemetry protocol
+        - CI / tooling
+    validations:
+      required: true
+  - type: textarea
+    id: observed
+    attributes:
+      label: Observed behaviour
+      description: Include the command you ran and the exact output.
+      render: text
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behaviour
+      description: Where possible, reference the README section or test that states it.
+    validations:
+      required: true
+  - type: input
+    id: environment
+    attributes:
+      label: Environment
+      placeholder: "Windows 11 / Python 3.12 / GCC 14.2 / QEMU 8.2 / ZCU102 rev 1.1"

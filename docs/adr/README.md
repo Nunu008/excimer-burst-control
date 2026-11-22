@@ -1,0 +1,10 @@
+# Architecture decision records
+
+Short records of decisions that shape the code, in the format of Michael Nygard's
+"Documenting Architecture Decisions". A record is never edited after it is accepted;
+a later record supersedes it instead.
+
+| No. | Decision | Status |
+|---|---|---|
+| [0001](0001-record-architecture-decisions.md) | Record architecture decisions | Accepted |
+| [0002](0002-python-model-as-executable-specification.md) | The Python model is the executable specification | Accepted |

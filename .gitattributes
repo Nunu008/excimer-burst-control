@@ -1,0 +1,11 @@
+# Normalise line endings in the repository; the toolchains (GNU as, ld scripts,
+# shell scripts in CI) expect LF regardless of the developer's OS.
+* text=auto eol=lf
+
+*.png binary
+*.jpg binary
+*.elf binary
+*.bin binary
+
+# Golden vectors are data, not code: keep them out of diffs and language stats.
+firmware/tests/golden/** linguist-generated=true -diff
